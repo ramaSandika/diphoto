@@ -1,0 +1,31 @@
+name: diphoto
+description: "A production-ready Digital Photobooth Flutter application optimized for tablets."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  flutter_riverpod: ^2.5.1
+  go_router: ^14.2.0
+  camera: ^0.10.5+9
+  camera_windows: ^0.2.5+1
+  image: ^4.2.0
+  googleapis: ^13.2.0
+  googleapis_auth: ^1.6.0
+  qr_flutter: ^4.1.0
+  file_picker: ^8.0.0
+  http: ^1.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
