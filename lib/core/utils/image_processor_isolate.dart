@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import '../constants/app_constants.dart';
 import 'template_slot_detector.dart';
@@ -134,7 +134,7 @@ class ImageProcessorIsolate {
     ];
   }
 
-  // ALGORITMA SMART CENTER-CROP (Object-fit: Cover)
+  // ALGORITMA SMART CENTER-CROP CEPAT (Crop langsung di resolusi asli lalu resize sekali)
   static img.Image _smartCenterCrop(
     img.Image source,
     int targetWidth,
@@ -143,33 +143,36 @@ class ImageProcessorIsolate {
     final double srcAspect = source.width / source.height;
     final double targetAspect = targetWidth / targetHeight;
 
-    int resizeW;
-    int resizeH;
+    int cropX = 0;
+    int cropY = 0;
+    int cropW = source.width;
+    int cropH = source.height;
 
+    // Crop dulu di ukuran asli sebelum resize (jauh lebih hemat memori & CPU)
     if (srcAspect > targetAspect) {
-      resizeH = targetHeight;
-      resizeW = (targetHeight * srcAspect).round();
+      // Source lebih lebar -> potong sisi kiri & kanan
+      cropW = (source.height * targetAspect).round().clamp(1, source.width);
+      cropX = ((source.width - cropW) / 2).round().clamp(0, source.width - cropW);
     } else {
-      resizeW = targetWidth;
-      resizeH = (targetWidth / srcAspect).round();
+      // Source lebih tinggi -> potong sisi atas & bawah
+      cropH = (source.width / targetAspect).round().clamp(1, source.height);
+      cropY = ((source.height - cropH) / 2).round().clamp(0, source.height - cropH);
     }
 
-    final img.Image resized = img.copyResize(
+    final img.Image cropped = img.copyCrop(
       source,
-      width: resizeW,
-      height: resizeH,
-      interpolation: img.Interpolation.linear,
-    );
-
-    final int cropX = ((resized.width - targetWidth) / 2).round().clamp(0, resized.width);
-    final int cropY = ((resized.height - targetHeight) / 2).round().clamp(0, resized.height);
-
-    return img.copyCrop(
-      resized,
       x: cropX,
       y: cropY,
+      width: cropW,
+      height: cropH,
+    );
+
+    // Resize hanya bagian yang sudah dicrop langsung ke target size
+    return img.copyResize(
+      cropped,
       width: targetWidth,
       height: targetHeight,
+      interpolation: img.Interpolation.linear,
     );
   }
 }
