@@ -15,15 +15,37 @@ class SetupView extends ConsumerStatefulWidget {
 }
 
 class _SetupViewState extends ConsumerState<SetupView> {
-  final TextEditingController _urlController = TextEditingController();
+  final TextEditingController _urlController      = TextEditingController();
+  final TextEditingController _driveUrlController = TextEditingController();
   List<CameraDescription> _availableCameras = [];
   bool _isLoadingCameras = true;
   String? _cameraPermissionError;
+  bool _configLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _loadCameras();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Isi text field dari konfigurasi yang tersimpan (hanya sekali)
+    if (!_configLoaded) {
+      _configLoaded = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final cfg = ref.read(setupProvider);
+        if (cfg.scriptUrl != null && cfg.scriptUrl!.isNotEmpty) {
+          _urlController.text = cfg.scriptUrl!;
+        }
+        // Tampilkan folder ID sebagai Drive URL di field Drive
+        if (cfg.folderId != null && cfg.folderId!.isNotEmpty) {
+          _driveUrlController.text =
+              'https://drive.google.com/drive/folders/${cfg.folderId}';
+        }
+      });
+    }
   }
 
   Future<void> _loadCameras() async {
@@ -62,6 +84,7 @@ class _SetupViewState extends ConsumerState<SetupView> {
   @override
   void dispose() {
     _urlController.dispose();
+    _driveUrlController.dispose();
     super.dispose();
   }
 
@@ -359,6 +382,7 @@ class _SetupViewState extends ConsumerState<SetupView> {
                                 ),
                                 const SizedBox(height: 12),
                                 TextField(
+                                  controller: _urlController,
                                   onChanged: (val) => ref.read(setupProvider.notifier).setScriptUrl(val),
                                   style: const TextStyle(color: Colors.white),
                                   decoration: InputDecoration(
@@ -368,7 +392,10 @@ class _SetupViewState extends ConsumerState<SetupView> {
                                     fillColor: const Color(0xFF1E1A2E),
                                     prefixIcon: const Icon(Icons.code_rounded, color: Color(0xFF00E676)),
                                     suffixIcon: setupConfig.scriptUrl != null && setupConfig.scriptUrl!.isNotEmpty
-                                        ? const Icon(Icons.check_circle, color: Color(0xFF00E676))
+                                        ? const Tooltip(
+                                            message: 'Tersimpan otomatis',
+                                            child: Icon(Icons.cloud_done, color: Color(0xFF00E676)),
+                                          )
                                         : null,
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
@@ -386,7 +413,7 @@ class _SetupViewState extends ConsumerState<SetupView> {
                                 ),
                                 const SizedBox(height: 12),
                                 TextField(
-                                  controller: _urlController,
+                                  controller: _driveUrlController,
                                   onChanged: (val) => ref.read(setupProvider.notifier).setGoogleDriveUrl(val),
                                   style: const TextStyle(color: Colors.white),
                                   decoration: InputDecoration(
@@ -396,7 +423,10 @@ class _SetupViewState extends ConsumerState<SetupView> {
                                     fillColor: const Color(0xFF1E1A2E),
                                     prefixIcon: const Icon(Icons.cloud_queue, color: Color(0xFF00E676)),
                                     suffixIcon: setupConfig.folderId != null
-                                        ? const Icon(Icons.check_circle, color: Color(0xFF00E676))
+                                        ? const Tooltip(
+                                            message: 'Tersimpan otomatis',
+                                            child: Icon(Icons.cloud_done, color: Color(0xFF00E676)),
+                                          )
                                         : null,
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(16),
