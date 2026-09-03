@@ -55,7 +55,13 @@ class TemplateSlotDetector {
       (y) => List.generate(anaW, (x) {
         final pixel = small.getPixel(x, y);
         final double alpha = pixel.a.toDouble();
-        return alpha < 128;
+        if (alpha < 128) return true;
+
+        // Fallback: Jika pengguna mengunggah template JPG atau PNG dengan kotak putih solid (R>245, G>245, B>245)
+        final double r = pixel.r.toDouble();
+        final double g = pixel.g.toDouble();
+        final double b = pixel.b.toDouble();
+        return r > 245 && g > 245 && b > 245;
       }),
     );
 

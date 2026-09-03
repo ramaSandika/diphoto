@@ -24,8 +24,8 @@ class SetupNotifier extends StateNotifier<SetupConfig> {
     state = state.copyWith(templatePngBytes: bytes, detectedSlots: null);
 
     try {
-      // Deteksi dimensi template
-      final decoded = img.decodePng(bytes);
+      // Deteksi dimensi template (mendukung PNG, JPG, WebP)
+      final decoded = img.decodeImage(bytes);
       final int tplW = decoded?.width ?? 1200;
       final int tplH = decoded?.height ?? 1800;
 

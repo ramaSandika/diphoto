@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -72,8 +74,12 @@ class _SetupViewState extends ConsumerState<SetupView> {
 
     if (result != null && result.files.isNotEmpty) {
       final file = result.files.first;
-      if (file.bytes != null) {
-        ref.read(setupProvider.notifier).setTemplateBytes(file.bytes!);
+      Uint8List? bytes = file.bytes;
+      if (bytes == null && file.path != null) {
+        bytes = await File(file.path!).readAsBytes();
+      }
+      if (bytes != null) {
+        await ref.read(setupProvider.notifier).setTemplateBytes(bytes);
       }
     }
   }

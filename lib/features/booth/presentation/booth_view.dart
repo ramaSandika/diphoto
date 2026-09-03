@@ -1,4 +1,4 @@
-﻿import 'package:camera/camera.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -140,7 +140,7 @@ class BoothView extends ConsumerWidget {
                   border: Border.all(color: const Color(0xFFFF4081), width: 1.5),
                 ),
                 child: Text(
-                  'Foto  / ',
+                  'Foto ${boothState.currentPhotoIndex + 1} / ${boothState.totalPhotosNeeded}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -174,7 +174,7 @@ class BoothView extends ConsumerWidget {
                     ],
                   ),
                   child: Text(
-                    '',
+                    '${boothState.countdownNumber}',
                     style: const TextStyle(
                       fontSize: 120,
                       fontWeight: FontWeight.w900,
