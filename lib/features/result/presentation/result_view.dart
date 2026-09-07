@@ -138,155 +138,174 @@ class ResultView extends ConsumerWidget {
             final isPortrait = orientation == Orientation.portrait;
 
             if (isPortrait) {
-              // ─── TAMPILAN PORTRAIT: FOTO FULL DI ATAS, BARCODE & 2 OPSI DI BAWAH ───
-              return SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // 1. Pratinjau Foto Hasil Komposit Full di Bagian Atas
-                    Center(
-                      child: Container(
-                        constraints: BoxConstraints(
-                          maxHeight: MediaQuery.of(context).size.height * 0.58,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.7),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: AspectRatio(
-                            aspectRatio: aspectRatio,
-                            child: Image.memory(
-                              state.compositeImageBytes!,
-                              fit: BoxFit.contain,
+              // ─── TAMPILAN PORTRAIT 1 SLIDE FULL (PAS DI UKURAN DEVICE, NO SCROLL) ───
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final totalH = constraints.maxHeight;
+                  // Alokasikan tinggi: ~62-65% untuk foto, sisanya untuk barcode & tombol
+                  final photoMaxH = (totalH * 0.62).clamp(260.0, 680.0);
+
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                    child: Column(
+                      children: [
+                        // 1. Pratinjau Foto Hasil Komposit Full di Bagian Atas
+                        Expanded(
+                          child: Center(
+                            child: Container(
+                              constraints: BoxConstraints(maxHeight: photoMaxH),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.7),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: AspectRatio(
+                                  aspectRatio: aspectRatio,
+                                  child: Image.memory(
+                                    state.compositeImageBytes!,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+
+                        const SizedBox(height: 12),
+
+                        // 2. Panel Bawah: Barcode di Kiri & 2 Tombol di Kanan (Horizontal agar ringkas & 1 slide pas)
+                        Container(
+                          constraints: const BoxConstraints(maxWidth: 520),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF161224),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.4),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Sisi Kiri Bawah: Barcode / QR Code
+                              _buildQrWidget(
+                                state,
+                                qrData,
+                                qrSize: 96,
+                                showLabel: false,
+                              ),
+
+                              const SizedBox(width: 16),
+
+                              // Sisi Kanan Bawah: Teks & 2 Tombol Aksi
+                              Expanded(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    const Text(
+                                      'Scan QR Folder Drive',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 14,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+
+                                    // Tombol Aksi 1: SESI BARU
+                                    SizedBox(
+                                      height: 44,
+                                      child: ElevatedButton.icon(
+                                        onPressed: () {
+                                          ref.read(boothProvider.notifier).resetBoothSession();
+                                          ref.read(resultProvider.notifier).reset();
+                                          if (onNewSession != null) {
+                                            onNewSession!();
+                                          } else {
+                                            context.go('/booth');
+                                          }
+                                        },
+                                        icon: const Icon(Icons.replay_rounded, size: 18),
+                                        label: const Text(
+                                          'SESI BARU',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 1.0,
+                                          ),
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFFFF4081),
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          elevation: 3,
+                                        ),
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 8),
+
+                                    // Tombol Aksi 2: Menu Setup
+                                    SizedBox(
+                                      height: 38,
+                                      child: ElevatedButton.icon(
+                                        onPressed: () {
+                                          ref.read(boothProvider.notifier).resetBoothSession();
+                                          ref.read(resultProvider.notifier).reset();
+                                          if (onBackToSetup != null) {
+                                            onBackToSetup!();
+                                          } else {
+                                            context.go('/');
+                                          }
+                                        },
+                                        icon: const Icon(Icons.settings, size: 16, color: Colors.white),
+                                        label: const Text(
+                                          'Menu Setup',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFF2A243D),
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            side: const BorderSide(color: Color(0xFF7C4DFF), width: 1.2),
+                                          ),
+                                          elevation: 1,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-
-                    const SizedBox(height: 20),
-
-                    // 2. Panel Barcode & 2 Pilihan Aksi di Bagian Bawah
-                    Container(
-                      constraints: const BoxConstraints(maxWidth: 480),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF161224),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.4),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'Foto Selesai!',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // QR Code / Uploading Indicator
-                          _buildQrWidget(state, qrData, qrSize: 130),
-
-                          const SizedBox(height: 18),
-
-                          // Tombol Aksi 1: Sesi Baru
-                          SizedBox(
-                            width: double.infinity,
-                            height: 48,
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                ref.read(boothProvider.notifier).resetBoothSession();
-                                ref.read(resultProvider.notifier).reset();
-                                if (onNewSession != null) {
-                                  onNewSession!();
-                                } else {
-                                  context.go('/booth');
-                                }
-                              },
-                              icon: const Icon(Icons.replay_rounded, size: 20),
-                              label: const Text(
-                                'SESI BARU',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.1,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFF4081),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                elevation: 4,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          // Tombol Aksi 2: Menu Setup
-                          SizedBox(
-                            width: double.infinity,
-                            height: 46,
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                ref.read(boothProvider.notifier).resetBoothSession();
-                                ref.read(resultProvider.notifier).reset();
-                                if (onBackToSetup != null) {
-                                  onBackToSetup!();
-                                } else {
-                                  context.go('/');
-                                }
-                              },
-                              icon: const Icon(Icons.settings, size: 18, color: Colors.white),
-                              label: const Text(
-                                'Menu Setup',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2A243D),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                  side: const BorderSide(color: Color(0xFF7C4DFF), width: 1.5),
-                                ),
-                                elevation: 2,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  );
+                },
               );
             }
 
@@ -442,12 +461,17 @@ class ResultView extends ConsumerWidget {
     }
   }
 
-  Widget _buildQrWidget(ResultState state, String? qrData, {required double qrSize}) {
+  Widget _buildQrWidget(
+    ResultState state,
+    String? qrData, {
+    required double qrSize,
+    bool showLabel = true,
+  }) {
     if (state.isUploading) {
       return Container(
-        height: qrSize + 20,
-        width: qrSize + 20,
-        padding: const EdgeInsets.all(16),
+        height: qrSize + (showLabel ? 20 : 0),
+        width: qrSize + (showLabel ? 20 : 0),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: const Color(0xFF1E1A2E),
           borderRadius: BorderRadius.circular(16),
@@ -460,11 +484,11 @@ class ResultView extends ConsumerWidget {
               color: Color(0xFFFF4081),
               strokeWidth: 3,
             ),
-            SizedBox(height: 14),
+            SizedBox(height: 8),
             Text(
-              'Mengunggah ke Drive...',
+              'Mengunggah...',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70, fontSize: 12),
+              style: TextStyle(color: Colors.white70, fontSize: 11),
             ),
           ],
         ),
@@ -474,10 +498,10 @@ class ResultView extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFFFF4081).withValues(alpha: 0.2),
@@ -498,31 +522,35 @@ class ResultView extends ConsumerWidget {
               backgroundColor: Colors.white,
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Scan QR untuk buka Folder Foto di Drive',
-            style: TextStyle(color: Colors.white70, fontSize: 12),
-          ),
+          if (showLabel) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'Scan QR untuk buka Folder Foto di Drive',
+              style: TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ],
         ],
       );
     } else {
       return Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: const Color(0xFF1E1A2E),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: Colors.white12),
         ),
-        child: const Column(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.qr_code_scanner, size: 48, color: Colors.white30),
-            SizedBox(height: 6),
-            Text(
-              'Link Google Drive belum diisi di Setup',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white60, fontSize: 11),
-            ),
+            Icon(Icons.qr_code_scanner, size: showLabel ? 48 : 36, color: Colors.white30),
+            if (showLabel) ...[
+              const SizedBox(height: 6),
+              const Text(
+                'Link Google Drive belum diisi di Setup',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white60, fontSize: 11),
+              ),
+            ],
           ],
         ),
       );
