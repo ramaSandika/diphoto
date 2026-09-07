@@ -608,6 +608,36 @@ class _SetupViewState extends ConsumerState<SetupView> {
                                       ],
                                     ),
                                   ),
+                                  if (setupConfig.scriptUrl == null ||
+                                      setupConfig.scriptUrl!.isEmpty ||
+                                      setupConfig.folderId == null ||
+                                      setupConfig.folderId!.isEmpty) ...[
+                                    const SizedBox(height: 10),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.amber.withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                                      ),
+                                      child: const Row(
+                                        children: [
+                                          Icon(Icons.info_outline, color: Colors.amber, size: 18),
+                                          SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'Tips: Isi Apps Script URL & Drive Folder agar foto otomatis terunggah ke Google Drive & barcode langsung aktif.',
+                                              style: TextStyle(
+                                                color: Colors.amber,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ],
                             ),

@@ -1,14 +1,13 @@
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/network/background_upload_queue.dart';
 import '../../../core/network/google_drive_service.dart';
 import '../../../core/utils/image_processor_isolate.dart';
 import '../../../core/utils/template_slot_detector.dart';
 import '../models/result_state.dart';
 
 class ResultController extends StateNotifier<ResultState> {
-  final GoogleDriveService _driveService;
-
-  ResultController(this._driveService) : super(const ResultState());
+  ResultController() : super(const ResultState());
 
   /// Menjalankan Isolate Image Processor dan langsung perlihatkan hasil gabungan foto & template
   Future<void> processAndUpload({
@@ -48,33 +47,18 @@ class ResultController extends StateNotifier<ResultState> {
         isUploading: (scriptUrl != null && scriptUrl.isNotEmpty && folderId != null && folderId.isNotEmpty),
       );
 
-      // 3. Upload ke Google Drive via Google Apps Script Web App jika Script URL & Folder ID tersedia
-      if (scriptUrl != null && scriptUrl.isNotEmpty && folderId != null && folderId.isNotEmpty) {
-        try {
-          final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-          final String fileName = 'photobooth_$timestamp.jpg';
+      // 3. Masukkan ke Antrian Upload Google Drive di background
+      // Upload akan tetap berjalan dan selesai meskipun pengguna langsung menekan 'SESI BARU'
+      if (scriptUrl != null && scriptUrl.trim().isNotEmpty && folderId != null && folderId.trim().isNotEmpty) {
+        final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+        final String fileName = 'photobooth_$timestamp.jpg';
 
-          await _driveService.uploadViaAppsScript(
-            photoBytes: compositeBytes,
-            scriptUrl: scriptUrl,
-            folderId: folderId,
-            fileName: fileName,
-          );
-
-          // Upload berhasil: barcode tetap mengarah ke FOLDER Google Drive
-          state = state.copyWith(
-            driveViewLink: folderLink,
-            isUploading: false,
-            uploadError: null,
-          );
-        } catch (e) {
-          // Tetap gunakan link folder Google Drive
-          state = state.copyWith(
-            driveViewLink: folderLink,
-            isUploading: false,
-            uploadError: e.toString(),
-          );
-        }
+        BackgroundUploadQueue.instance.enqueue(
+          photoBytes: compositeBytes,
+          scriptUrl: scriptUrl,
+          folderId: folderId,
+          fileName: fileName,
+        );
       }
     } catch (e) {
       state = state.copyWith(
@@ -94,6 +78,5 @@ final googleDriveServiceProvider = Provider<GoogleDriveService>((ref) {
 });
 
 final resultProvider = StateNotifierProvider<ResultController, ResultState>((ref) {
-  final driveService = ref.read(googleDriveServiceProvider);
-  return ResultController(driveService);
+  return ResultController();
 });
