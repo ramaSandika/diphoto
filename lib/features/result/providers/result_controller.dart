@@ -36,10 +36,15 @@ class ResultController extends StateNotifier<ResultState> {
       final Uint8List compositeBytes = await ImageProcessorIsolate.processBoothImages(payload);
 
       // 2. Langsung tampilkan hasil komposit (Instant Display)
+      // Barcode selalu merujuk ke link FOLDER Google Drive agar tamu bisa melihat/mengunduh semua foto dalam folder
+      final String? folderLink = (folderId != null && folderId.isNotEmpty)
+          ? 'https://drive.google.com/drive/folders/$folderId'
+          : null;
+
       state = state.copyWith(
         status: ResultStatus.success,
         compositeImageBytes: compositeBytes,
-        driveViewLink: null,
+        driveViewLink: folderLink,
         isUploading: (scriptUrl != null && scriptUrl.isNotEmpty && folderId != null && folderId.isNotEmpty),
       );
 
@@ -49,35 +54,27 @@ class ResultController extends StateNotifier<ResultState> {
           final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
           final String fileName = 'photobooth_$timestamp.jpg';
 
-          final String viewLink = await _driveService.uploadViaAppsScript(
+          await _driveService.uploadViaAppsScript(
             photoBytes: compositeBytes,
             scriptUrl: scriptUrl,
             folderId: folderId,
             fileName: fileName,
           );
 
-          // Update QR Code link jika upload berhasil
+          // Upload berhasil: barcode tetap mengarah ke FOLDER Google Drive
           state = state.copyWith(
-            driveViewLink: viewLink,
+            driveViewLink: folderLink,
             isUploading: false,
             uploadError: null,
           );
         } catch (e) {
-          // Fallback: gunakan link folder Google Drive langsung sebagai QR code
-          final folderLink = 'https://drive.google.com/drive/folders/$folderId';
+          // Tetap gunakan link folder Google Drive
           state = state.copyWith(
             driveViewLink: folderLink,
             isUploading: false,
             uploadError: e.toString(),
           );
         }
-      } else if (folderId != null && folderId.isNotEmpty) {
-        // Jika hanya folder ID yang diisi, gunakan link folder langsung sebagai QR Code
-        final folderLink = 'https://drive.google.com/drive/folders/$folderId';
-        state = state.copyWith(
-          driveViewLink: folderLink,
-          isUploading: false,
-        );
       }
     } catch (e) {
       state = state.copyWith(

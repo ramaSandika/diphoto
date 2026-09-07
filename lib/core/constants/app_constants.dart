@@ -22,6 +22,6 @@ class AppConstants {
   static const Duration flashDuration = Duration(milliseconds: 100);
   static const Duration intervalBetweenShots = Duration(milliseconds: 1500);
 
-  // Kualitas output JPEG (80% optimal untuk kecepatan encode sub-3s & upload cepat tanpa kompromi kualitas)
-  static const int jpegQuality = 80;
+  // Kualitas output JPEG (95% resolusi jernih dan tajam tanpa kompresi berat)
+  static const int jpegQuality = 95;
 }

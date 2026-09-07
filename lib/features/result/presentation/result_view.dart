@@ -248,15 +248,13 @@ class ResultView extends ConsumerWidget {
                                     backgroundColor: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  state.uploadError != null
-                                      ? 'Scan QR untuk buka Folder Drive'
-                                      : 'Scan QR untuk unduh foto',
-                                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                                ),
-                              ],
-                            )
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'Scan QR untuk buka Folder Foto di Drive',
+                                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                                  ),
+                                ],
+                              )
                           else
                             Container(
                               padding: const EdgeInsets.all(14),
