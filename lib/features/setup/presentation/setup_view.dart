@@ -1,10 +1,9 @@
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/utils/file_reader_facade.dart';
 import '../providers/setup_provider.dart';
 
 class SetupView extends ConsumerStatefulWidget {
@@ -75,7 +74,7 @@ class _SetupViewState extends ConsumerState<SetupView> {
         setState(() {
           _isLoadingCameras = false;
           _cameraPermissionError =
-              'Izin kamera belum diberikan atau diblokir oleh Windows/OS. Pastikan toggle Privacy & Security > Camera aktif.';
+              'Izin kamera belum diberikan atau diblokir oleh Browser/OS. Pastikan izin kamera telah diizinkan.';
         });
       }
     }
@@ -97,10 +96,10 @@ class _SetupViewState extends ConsumerState<SetupView> {
 
     if (result != null && result.files.isNotEmpty) {
       final file = result.files.first;
-      Uint8List? bytes = file.bytes;
-      if (bytes == null && file.path != null) {
-        bytes = await File(file.path!).readAsBytes();
-      }
+      final bytes = await readFileBytesSafe(
+        directBytes: file.bytes,
+        path: file.path,
+      );
       if (bytes != null) {
         await ref.read(setupProvider.notifier).setTemplateBytes(bytes);
       }
@@ -330,7 +329,7 @@ class _SetupViewState extends ConsumerState<SetupView> {
                                                     const SizedBox(width: 12),
                                                     const Expanded(
                                                       child: Text(
-                                                        'Tidak ada kamera ditemukan. Pasang webcam atau aktifkan izin privasi Windows.',
+                                                        'Tidak ada kamera ditemukan. Hubungkan webcam atau aktifkan izin kamera perangkat / browser.',
                                                         style: TextStyle(color: Colors.amber, fontSize: 13),
                                                       ),
                                                     ),
