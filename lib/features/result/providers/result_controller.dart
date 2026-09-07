@@ -40,6 +40,7 @@ class ResultController extends StateNotifier<ResultState> {
         status: ResultStatus.success,
         compositeImageBytes: compositeBytes,
         driveViewLink: null,
+        isUploading: (scriptUrl != null && scriptUrl.isNotEmpty && folderId != null && folderId.isNotEmpty),
       );
 
       // 3. Upload ke Google Drive via Google Apps Script Web App jika Script URL & Folder ID tersedia
@@ -56,16 +57,27 @@ class ResultController extends StateNotifier<ResultState> {
           );
 
           // Update QR Code link jika upload berhasil
-          state = state.copyWith(driveViewLink: viewLink);
+          state = state.copyWith(
+            driveViewLink: viewLink,
+            isUploading: false,
+            uploadError: null,
+          );
         } catch (e) {
           // Fallback: gunakan link folder Google Drive langsung sebagai QR code
           final folderLink = 'https://drive.google.com/drive/folders/$folderId';
-          state = state.copyWith(driveViewLink: folderLink);
+          state = state.copyWith(
+            driveViewLink: folderLink,
+            isUploading: false,
+            uploadError: e.toString(),
+          );
         }
       } else if (folderId != null && folderId.isNotEmpty) {
         // Jika hanya folder ID yang diisi, gunakan link folder langsung sebagai QR Code
         final folderLink = 'https://drive.google.com/drive/folders/$folderId';
-        state = state.copyWith(driveViewLink: folderLink);
+        state = state.copyWith(
+          driveViewLink: folderLink,
+          isUploading: false,
+        );
       }
     } catch (e) {
       state = state.copyWith(

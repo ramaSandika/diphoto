@@ -179,32 +179,69 @@ class ResultView extends ConsumerWidget {
                           ),
                           const SizedBox(height: 10),
 
-                          // QR Code — ukuran adaptif berdasarkan tinggi layar
-                          if (qrData != null)
+                          // QR Code / Uploading Indicator
+                          if (state.isUploading)
                             Container(
-                              padding: const EdgeInsets.all(10),
+                              height: qrSize + 20,
+                              width: qrSize + 20,
+                              padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: const Color(0xFF1E1A2E),
                                 borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFFFF4081).withValues(alpha: 0.2),
-                                    blurRadius: 16,
-                                    spreadRadius: 1,
+                                border: Border.all(color: const Color(0xFFFF4081).withValues(alpha: 0.3)),
+                              ),
+                              child: const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircularProgressIndicator(
+                                    color: Color(0xFFFF4081),
+                                    strokeWidth: 3,
                                   ),
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.3),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
+                                  SizedBox(height: 14),
+                                  Text(
+                                    'Mengunggah ke Drive...',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Colors.white70, fontSize: 12),
                                   ),
                                 ],
                               ),
-                              child: QrImageView(
-                                data: qrData,
-                                version: QrVersions.auto,
-                                size: qrSize,
-                                backgroundColor: Colors.white,
-                              ),
+                            )
+                          else if (qrData != null)
+                            Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFFFF4081).withValues(alpha: 0.2),
+                                        blurRadius: 16,
+                                        spreadRadius: 1,
+                                      ),
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.3),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: QrImageView(
+                                    data: qrData,
+                                    version: QrVersions.auto,
+                                    size: qrSize,
+                                    backgroundColor: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  state.uploadError != null
+                                      ? 'Scan QR untuk buka Folder Drive'
+                                      : 'Scan QR untuk unduh foto',
+                                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                ),
+                              ],
                             )
                           else
                             Container(
@@ -219,7 +256,7 @@ class ResultView extends ConsumerWidget {
                                   Icon(Icons.qr_code_scanner, size: 48, color: Colors.white30),
                                   SizedBox(height: 6),
                                   Text(
-                                    'Link Google Drive belum diisi',
+                                    'Link Google Drive belum diisi di Setup',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(color: Colors.white60, fontSize: 11),
                                   ),

@@ -14,27 +14,43 @@ class GoogleDriveService {
     final base64Image = base64Encode(photoBytes);
     final uri = Uri.parse(scriptUrl.trim());
 
+    final payload = jsonEncode({
+      'image': base64Image,
+      'fileName': fileName,
+      'folderId': folderId.trim(),
+    });
+
+    // Catatan: Google Apps Script Web App tidak menangani HTTP OPTIONS (CORS preflight).
+    // Menggunakan 'text/plain;charset=utf-8' diperlakukan oleh browser sebagai 'Simple Request'
+    // sehingga browser langsung mengirimkan POST tanpa OPTIONS preflight.
     final response = await http
         .post(
           uri,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'image': base64Image,
-            'fileName': fileName,
-            'folderId': folderId.trim(),
-          }),
+          headers: {'Content-Type': 'text/plain;charset=utf-8'},
+          body: payload,
         )
-        .timeout(const Duration(seconds: 35));
+        .timeout(const Duration(seconds: 45));
 
-    if (response.statusCode == 200 || response.statusCode == 302) {
-      final Map<String, dynamic> body = jsonDecode(response.body);
-      if (body['success'] == true && body['link'] != null) {
-        return body['link'] as String;
-      } else {
-        throw Exception(body['error'] ?? 'Gagal mengunggah foto ke Google Drive');
+    if (response.statusCode >= 200 && response.statusCode < 400) {
+      try {
+        final Map<String, dynamic> body = jsonDecode(response.body);
+        if (body['success'] == true && body['link'] != null) {
+          return body['link'] as String;
+        } else if (body['error'] != null) {
+          throw Exception(body['error']);
+        }
+      } catch (e) {
+        if (e is Exception && e.toString().contains('Gagal')) rethrow;
+        // Jika response body berupa redirect HTML atau text sukses dari script
+        if (response.body.contains('drive.google.com')) {
+          final match = RegExp(r'https://drive\.google\.com/[^\s"<>]+').firstMatch(response.body);
+          if (match != null) return match.group(0)!;
+        }
       }
+      // Jika berhasil tapi respons redirect tidak mengembalikan json link
+      return 'https://drive.google.com/drive/folders/${folderId.trim()}';
     } else {
-      throw Exception('Gagal menghubungi Web App (Status: ${response.statusCode})');
+      throw Exception('Server merespons dengan status: ${response.statusCode}');
     }
   }
 }
