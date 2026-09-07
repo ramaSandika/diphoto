@@ -467,7 +467,83 @@ class ResultView extends ConsumerWidget {
     required double qrSize,
     bool showLabel = true,
   }) {
-    if (state.isUploading) {
+    if (qrData != null) {
+      // TAMPILKAN BARCODE / QR CODE LANGSUNG (INSTANT 0ms)
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF4081).withValues(alpha: 0.2),
+                      blurRadius: 16,
+                      spreadRadius: 1,
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: QrImageView(
+                  data: qrData,
+                  version: QrVersions.auto,
+                  size: qrSize,
+                  backgroundColor: Colors.white,
+                ),
+              ),
+              // Indikator kecil upload di pojok bawah QR jika background upload masih berjalan
+              if (state.isUploading)
+                Positioned(
+                  bottom: 4,
+                  right: 4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E1A2E).withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFFF4081), width: 1),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 10,
+                          height: 10,
+                          child: CircularProgressIndicator(
+                            color: Color(0xFFFF4081),
+                            strokeWidth: 2,
+                          ),
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'Sync Drive',
+                          style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (showLabel) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'Scan QR untuk buka Folder Foto di Drive',
+              style: TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ],
+        ],
+      );
+    } else if (state.isUploading) {
       return Container(
         height: qrSize + (showLabel ? 20 : 0),
         width: qrSize + (showLabel ? 20 : 0),
@@ -492,44 +568,6 @@ class ResultView extends ConsumerWidget {
             ),
           ],
         ),
-      );
-    } else if (qrData != null) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFF4081).withValues(alpha: 0.2),
-                  blurRadius: 16,
-                  spreadRadius: 1,
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: QrImageView(
-              data: qrData,
-              version: QrVersions.auto,
-              size: qrSize,
-              backgroundColor: Colors.white,
-            ),
-          ),
-          if (showLabel) ...[
-            const SizedBox(height: 8),
-            const Text(
-              'Scan QR untuk buka Folder Foto di Drive',
-              style: TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-          ],
-        ],
       );
     } else {
       return Container(
