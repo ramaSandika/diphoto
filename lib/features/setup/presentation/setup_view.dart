@@ -91,8 +91,7 @@ class _SetupViewState extends ConsumerState<SetupView> {
   Future<void> _pickTemplateFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['png', 'jpg', 'jpeg'],
+        type: FileType.image,
         withData: true,
       );
 
