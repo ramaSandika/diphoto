@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 class AppTheme {
   static final ThemeData darkBoothTheme = ThemeData(
     brightness: Brightness.dark,
-    scaffoldBackgroundColor: const Color(0xFF121212),
+    scaffoldBackgroundColor: const Color(0xFF0F0B18),
     primaryColor: const Color(0xFFFF4081),
     colorScheme: const ColorScheme.dark(
       primary: Color(0xFFFF4081),
       secondary: Color(0xFF00E676),
-      surface: Color(0xFF1E1E1E),
+      surface: Color(0xFF1E1A2E),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(

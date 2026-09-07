@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -146,9 +146,22 @@ class BoothController extends StateNotifier<BoothState> {
     }
   }
 
+  /// Update status USB Hardware Shutter
+  void updateUsbStatus(String message, bool isConnected) {
+    if (mounted) {
+      state = state.copyWith(
+        isUsbConnected: isConnected,
+        usbStatusMessage: message,
+      );
+    }
+  }
+
   /// Reset session foto booth tanpa membuang koneksi sensor kamera
   void resetBoothSession() {
-    state = const BoothState();
+    state = BoothState(
+      isUsbConnected: state.isUsbConnected,
+      usbStatusMessage: state.usbStatusMessage,
+    );
   }
 
   @override
@@ -162,7 +175,7 @@ class BoothController extends StateNotifier<BoothState> {
 
 final boothProvider = StateNotifierProvider<BoothController, BoothState>((ref) {
   final controller = BoothController();
-  final setupConfig = ref.watch(setupProvider);
-  controller.initializeCamera(preferredCamera: setupConfig.selectedCamera);
+  final selectedCamera = ref.watch(setupProvider.select((s) => s.selectedCamera));
+  controller.initializeCamera(preferredCamera: selectedCamera);
   return controller;
 });

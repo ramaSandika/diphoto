@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 
 enum BoothStep {
   idle,
@@ -16,6 +16,8 @@ class BoothState {
   final int totalPhotosNeeded; // 1 atau 2 foto
   final List<Uint8List> capturedPhotos;
   final String? errorMessage;
+  final bool isUsbConnected;
+  final String? usbStatusMessage;
 
   const BoothState({
     this.step = BoothStep.idle,
@@ -25,6 +27,8 @@ class BoothState {
     this.totalPhotosNeeded = 2,
     this.capturedPhotos = const [],
     this.errorMessage,
+    this.isUsbConnected = false,
+    this.usbStatusMessage,
   });
 
   BoothState copyWith({
@@ -35,6 +39,8 @@ class BoothState {
     int? totalPhotosNeeded,
     List<Uint8List>? capturedPhotos,
     String? errorMessage,
+    bool? isUsbConnected,
+    String? usbStatusMessage,
   }) {
     return BoothState(
       step: step ?? this.step,
@@ -44,6 +50,8 @@ class BoothState {
       totalPhotosNeeded: totalPhotosNeeded ?? this.totalPhotosNeeded,
       capturedPhotos: capturedPhotos ?? this.capturedPhotos,
       errorMessage: errorMessage ?? this.errorMessage,
+      isUsbConnected: isUsbConnected ?? this.isUsbConnected,
+      usbStatusMessage: usbStatusMessage ?? this.usbStatusMessage,
     );
   }
 }

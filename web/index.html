@@ -38,18 +38,44 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    #boot-loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: white;
+    }
+    .boot-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(255, 64, 129, 0.2);
+      border-top-color: #FF4081;
+      border-radius: 50%;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .boot-text {
+      margin-top: 18px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: #FFFFFF;
     }
   </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
-
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <div id="boot-loader">
+    <div class="boot-spinner"></div>
+    <div class="boot-text">DiPHOTO STUDIO</div>
+  </div>
+  <script src="usb_shutter.js"></script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

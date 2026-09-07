@@ -2,16 +2,90 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/services/usb_shutter_facade.dart';
 import '../../setup/providers/setup_provider.dart';
 import '../models/booth_state.dart';
 import '../providers/booth_controller.dart';
 import '../../result/providers/result_controller.dart';
 
-class BoothView extends ConsumerWidget {
+class BoothView extends ConsumerStatefulWidget {
   const BoothView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BoothView> createState() => _BoothViewState();
+}
+
+class _BoothViewState extends ConsumerState<BoothView> {
+  late final CameraUsbShutterService _usbShutterService;
+
+  @override
+  void initState() {
+    super.initState();
+    _usbShutterService = CameraUsbShutterService();
+
+    _usbShutterService.onStatus = (msg, isConnected) {
+      if (mounted) {
+        ref.read(boothProvider.notifier).updateUsbStatus(msg, isConnected);
+      }
+    };
+
+    _usbShutterService.onShutter = () {
+      if (mounted) {
+        final boothState = ref.read(boothProvider);
+        if (boothState.step == BoothStep.idle) {
+          _triggerCapture();
+        }
+      }
+    };
+  }
+
+  @override
+  void dispose() {
+    _usbShutterService.disconnect();
+    super.dispose();
+  }
+
+  void _triggerCapture() {
+    final setupConfig = ref.read(setupProvider);
+    final boothCtrl = ref.read(boothProvider.notifier);
+
+    final neededPhotos = setupConfig.photoCount;
+    boothCtrl.startCaptureSequence(
+      totalPhotos: neededPhotos,
+      onSequenceFinished: () {
+        if (!mounted) return;
+        final stateNow = ref.read(boothProvider);
+        if (stateNow.capturedPhotos.isNotEmpty && setupConfig.templatePngBytes != null) {
+          ref.read(resultProvider.notifier).processAndUpload(
+                photos: stateNow.capturedPhotos,
+                template: setupConfig.templatePngBytes!,
+                detectedSlots: setupConfig.detectedSlots,
+                templateWidth: setupConfig.templateWidth,
+                templateHeight: setupConfig.templateHeight,
+                scriptUrl: setupConfig.scriptUrl,
+                folderId: setupConfig.folderId,
+              );
+          context.go('/result');
+        }
+      },
+    );
+  }
+
+  Future<void> _handleConnectUsb() async {
+    final success = await _usbShutterService.connect();
+    if (mounted && !success) {
+      final stateNow = ref.read(boothProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(stateNow.usbStatusMessage ?? 'Gagal menghubungkan kamera via USB'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final boothState = ref.watch(boothProvider);
     final boothCtrl = ref.read(boothProvider.notifier);
     final setupConfig = ref.watch(setupProvider);
@@ -108,22 +182,68 @@ class BoothView extends ConsumerWidget {
             ),
           ),
 
-          // 2. Tombol Kembali ke Setup (Pojok Kiri Atas)
+          // 2. Tombol Navigasi & Status USB di Kiri Atas
           if (boothState.step == BoothStep.idle)
             Positioned(
               top: 24,
               left: 24,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  tooltip: 'Kembali ke Setup',
-                  onPressed: () => context.go('/'),
-                ),
+              child: Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      tooltip: 'Kembali ke Setup',
+                      onPressed: () => context.go('/'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Tombol / Badge USB Shutter Kamera Hardware
+                  InkWell(
+                    onTap: _handleConnectUsb,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: boothState.isUsbConnected
+                            ? const Color(0xFF00E676).withValues(alpha: 0.2)
+                            : Colors.black.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: boothState.isUsbConnected
+                              ? const Color(0xFF00E676)
+                              : Colors.white.withValues(alpha: 0.25),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            boothState.isUsbConnected ? Icons.usb : Icons.usb_off_rounded,
+                            color: boothState.isUsbConnected ? const Color(0xFF00E676) : Colors.white70,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            boothState.isUsbConnected
+                                ? (boothState.usbStatusMessage ?? 'USB Shutter Aktif')
+                                : 'Hubungkan Shutter USB (Sony/DSLR)',
+                            style: TextStyle(
+                              color: boothState.isUsbConnected ? const Color(0xFF00E676) : Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -193,27 +313,7 @@ class BoothView extends ConsumerWidget {
               right: 0,
               child: Center(
                 child: GestureDetector(
-                  onTap: () {
-                    final neededPhotos = setupConfig.photoCount;
-                    boothCtrl.startCaptureSequence(
-                      totalPhotos: neededPhotos,
-                      onSequenceFinished: () {
-                        final stateNow = ref.read(boothProvider);
-                        if (stateNow.capturedPhotos.isNotEmpty && setupConfig.templatePngBytes != null) {
-                          ref.read(resultProvider.notifier).processAndUpload(
-                                photos: stateNow.capturedPhotos,
-                                template: setupConfig.templatePngBytes!,
-                                detectedSlots: setupConfig.detectedSlots,
-                                templateWidth: setupConfig.templateWidth,
-                                templateHeight: setupConfig.templateHeight,
-                                scriptUrl: setupConfig.scriptUrl,
-                                folderId: setupConfig.folderId,
-                              );
-                          context.go('/result');
-                        }
-                      },
-                    );
-                  },
+                  onTap: _triggerCapture,
                   child: Container(
                     width: 96,
                     height: 96,
