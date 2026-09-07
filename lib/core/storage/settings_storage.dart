@@ -56,10 +56,15 @@ class SettingsStorage {
   }
 
   static Future<void> saveTemplate(Uint8List bytes, int width, int height) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyTemplateB64, base64Encode(bytes));
-    await prefs.setInt(_keyTplWidth, width);
-    await prefs.setInt(_keyTplHeight, height);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_keyTemplateB64, base64Encode(bytes));
+      await prefs.setInt(_keyTplWidth, width);
+      await prefs.setInt(_keyTplHeight, height);
+    } catch (_) {
+      // Pada web browser, jika file template melebihi limit 5MB localStorage,
+      // tangkap error agar aplikasi tetap berjalan lancar menggunakan RAM
+    }
   }
 
   static Future<void> clearTemplate() async {

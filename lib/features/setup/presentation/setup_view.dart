@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:camera/camera.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -88,20 +89,50 @@ class _SetupViewState extends ConsumerState<SetupView> {
   }
 
   Future<void> _pickTemplateFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['png'],
-      withData: true,
-    );
-
-    if (result != null && result.files.isNotEmpty) {
-      final file = result.files.first;
-      final bytes = await readFileBytesSafe(
-        directBytes: file.bytes,
-        path: file.path,
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['png', 'jpg', 'jpeg'],
+        withData: true,
       );
-      if (bytes != null) {
-        await ref.read(setupProvider.notifier).setTemplateBytes(bytes);
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        Uint8List? bytes = file.bytes;
+        if (bytes == null || bytes.isEmpty) {
+          if (file.readStream != null) {
+            final chunks = await file.readStream!.toList();
+            final totalLength = chunks.fold<int>(0, (sum, chunk) => sum + chunk.length);
+            final combined = Uint8List(totalLength);
+            int offset = 0;
+            for (final chunk in chunks) {
+              combined.setRange(offset, offset + chunk.length, chunk);
+              offset += chunk.length;
+            }
+            bytes = combined;
+          } else {
+            bytes = await readFileBytesSafe(
+              directBytes: file.bytes,
+              path: file.path,
+            );
+          }
+        }
+
+        if (bytes != null && bytes.isNotEmpty) {
+          await ref.read(setupProvider.notifier).setTemplateBytes(bytes);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Gagal membaca file gambar yang dipilih.')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saat upload file: $e')),
+        );
       }
     }
   }

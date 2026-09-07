@@ -28,6 +28,9 @@ class _DetectPayload {
 /// Detektor otomatis slot foto transparan dalam template PNG.
 class TemplateSlotDetector {
   static Future<List<PhotoSlot>> detect(Uint8List templateBytes) async {
+    if (kIsWeb) {
+      return _detectTask(_DetectPayload(templateBytes));
+    }
     return await compute(_detectTask, _DetectPayload(templateBytes));
   }
 

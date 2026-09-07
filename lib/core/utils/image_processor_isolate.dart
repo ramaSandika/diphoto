@@ -29,6 +29,9 @@ class CompositePayload {
 class ImageProcessorIsolate {
   /// Entry point publik
   static Future<Uint8List> processBoothImages(CompositePayload payload) async {
+    if (kIsWeb) {
+      return _compositeTask(payload);
+    }
     return await compute(_compositeTask, payload);
   }
 
