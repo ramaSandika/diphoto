@@ -31,7 +31,6 @@ window.DiPhotoUSB = {
     }
 
     try {
-    try {
       // Filter: Vendor Sony (0x054C), Canon (0x04A9), Nikon (0x04B0), Fujifilm (0x04CB), Panasonic (0x04DA), atau Still Imaging PTP (0x06)
       const filters = [
         { vendorId: 0x054C }, // Sony
