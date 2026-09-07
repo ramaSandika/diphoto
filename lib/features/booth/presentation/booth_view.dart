@@ -233,7 +233,7 @@ class _BoothViewState extends ConsumerState<BoothView> {
                           Text(
                             boothState.isUsbConnected
                                 ? (boothState.usbStatusMessage ?? 'USB Shutter Aktif')
-                                : 'Hubungkan Shutter USB (Sony/DSLR)',
+                                : 'Hubungkan Shutter USB',
                             style: TextStyle(
                               color: boothState.isUsbConnected ? const Color(0xFF00E676) : Colors.white,
                               fontSize: 12,
