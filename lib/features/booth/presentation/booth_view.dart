@@ -6,6 +6,8 @@ import '../../../core/services/usb_shutter_facade.dart';
 import '../../setup/providers/setup_provider.dart';
 import '../models/booth_state.dart';
 import '../providers/booth_controller.dart';
+import '../../result/models/result_state.dart';
+import '../../result/presentation/result_view.dart';
 import '../../result/providers/result_controller.dart';
 
 class BoothView extends ConsumerStatefulWidget {
@@ -65,7 +67,6 @@ class _BoothViewState extends ConsumerState<BoothView> {
                 scriptUrl: setupConfig.scriptUrl,
                 folderId: setupConfig.folderId,
               );
-          context.go('/result');
         }
       },
     );
@@ -354,6 +355,22 @@ class _BoothViewState extends ConsumerState<BoothView> {
               color: Colors.white,
               width: double.infinity,
               height: double.infinity,
+            ),
+
+          // 7. Full-Screen Result Overlay (Kamera tetap hidup di latar belakang - Jank & Lag Free)
+          if (ref.watch(resultProvider).status != ResultStatus.idle)
+            Positioned.fill(
+              child: ResultView(
+                onNewSession: () {
+                  ref.read(boothProvider.notifier).resetBoothSession();
+                  ref.read(resultProvider.notifier).reset();
+                },
+                onBackToSetup: () {
+                  ref.read(boothProvider.notifier).resetBoothSession();
+                  ref.read(resultProvider.notifier).reset();
+                  context.go('/');
+                },
+              ),
             ),
         ],
       ),

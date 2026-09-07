@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 enum ResultStatus {
+  idle,
   processing,
   uploading,
   success,
@@ -16,7 +17,7 @@ class ResultState {
   final String? uploadError;
 
   const ResultState({
-    this.status = ResultStatus.processing,
+    this.status = ResultStatus.idle,
     this.compositeImageBytes,
     this.driveViewLink,
     this.errorMessage,

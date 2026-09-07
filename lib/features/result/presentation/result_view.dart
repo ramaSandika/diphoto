@@ -8,7 +8,14 @@ import '../../booth/providers/booth_controller.dart';
 import '../../setup/providers/setup_provider.dart';
 
 class ResultView extends ConsumerWidget {
-  const ResultView({super.key});
+  final VoidCallback? onNewSession;
+  final VoidCallback? onBackToSetup;
+
+  const ResultView({
+    super.key,
+    this.onNewSession,
+    this.onBackToSetup,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,6 +33,9 @@ class ResultView extends ConsumerWidget {
     final setupConfig = ref.watch(setupProvider);
 
     switch (state.status) {
+      case ResultStatus.idle:
+        return const SizedBox.shrink();
+
       case ResultStatus.processing:
       case ResultStatus.uploading:
         return const Center(
@@ -84,26 +94,30 @@ class ResultView extends ConsumerWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      ref.read(boothProvider.notifier).resetBoothSession();
-                      ref.read(resultProvider.notifier).reset();
-                      context.go('/booth');
-                    },
-                    icon: const Icon(Icons.replay_rounded),
-                    label: const Text('Coba Lagi'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF4081),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        ref.read(boothProvider.notifier).resetBoothSession();
+                        ref.read(resultProvider.notifier).reset();
+                        if (onNewSession != null) {
+                          onNewSession!();
+                        } else {
+                          context.go('/booth');
+                        }
+                      },
+                      icon: const Icon(Icons.replay_rounded),
+                      label: const Text('Coba Lagi'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF4081),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
@@ -274,7 +288,11 @@ class ResultView extends ConsumerWidget {
                               onPressed: () {
                                 ref.read(boothProvider.notifier).resetBoothSession();
                                 ref.read(resultProvider.notifier).reset();
-                                context.go('/booth');
+                                if (onNewSession != null) {
+                                  onNewSession!();
+                                } else {
+                                  context.go('/booth');
+                                }
                               },
                               icon: const Icon(Icons.replay_rounded, size: 20),
                               label: const Text(
@@ -305,7 +323,11 @@ class ResultView extends ConsumerWidget {
                               onPressed: () {
                                 ref.read(boothProvider.notifier).resetBoothSession();
                                 ref.read(resultProvider.notifier).reset();
-                                context.go('/');
+                                if (onBackToSetup != null) {
+                                  onBackToSetup!();
+                                } else {
+                                  context.go('/');
+                                }
                               },
                               icon: const Icon(Icons.settings, size: 18, color: Colors.white),
                               label: const Text(
